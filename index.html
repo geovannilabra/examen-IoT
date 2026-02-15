@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen IoT - Control de Puertas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <span class="navbar-brand">ITP | Solución IoT: Puertas Inteligentes</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <ul class="nav nav-pills nav-fill mb-4" id="pills-tab" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#admin">1. Administración (CRUD)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#control">2. Control (Switches)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#monitoreo">3. Monitoreo (Real-time)</button></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="admin">
+                <div class="card p-3 mb-3 shadow-sm">
+                    <h5>Nueva Puerta</h5>
+                    <div class="row g-2">
+                        <div class="col-md-5"><input type="text" id="nombreP" class="form-control" placeholder="Nombre (ej. Principal)"></div>
+                        <div class="col-md-5"><input type="text" id="ubicacionP" class="form-control" placeholder="Ubicación"></div>
+                        <div class="col-md-2"><button class="btn btn-primary w-100" onclick="crearPuerta()">Agregar</button></div>
+                    </div>
+                </div>
+                <table class="table table-white shadow-sm rounded">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Ubicación</th>
+                            <th>Acciones</th></tr>
+                        </thead>
+                    <tbody id="tablaAdmin"></tbody>
+                </table>
+            </div>
+
+            <div class="tab-pane fade" id="control">
+                <div class="row" id="contenedorControl"></div>
+            </div>
+
+            <div class="tab-pane fade" id="monitoreo">
+                <div class="row mb-4" id="contenedorGrafico"></div>
+                <h5>Historial de Movimientos</h5>
+                <table class="table table-sm table-striped bg-white shadow-sm">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Dispositivo</th>
+                            <th>Estatus</th>
+                            <th>Batería</th>
+                            <th>Fecha</th>
+                            <th>Última Apertura</th>
+                            <th>Último Cierre</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaMonitoreo"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="tituloModal">Historial de Accesos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+    <div class="modal-body">
+                    <div class="d-flex justify-content-between mb-3 bg-light p-2 rounded border">
+                        <p class="mb-0 text-success fw-bold small">Aperturas hoy: <span id="contadorAperturas">0</span></p>
+                        <p class="mb-0 text-danger fw-bold small">Cierres hoy: <span id="contadorCierres">0</span></p>
+                    </div>
+                    <table class="table table-hover text-center small">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Hora de Apertura</th>
+                                <th>Hora de Cierre</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaDetalle"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
