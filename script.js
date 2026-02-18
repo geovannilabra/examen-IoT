@@ -2,7 +2,7 @@ const API_URL = "https://698a177cc04d974bc6a15386.mockapi.io/api/v1/puertas";
 
 document.addEventListener("DOMContentLoaded", () => {
     actualizarDatos();
-    setInterval(actualizarDatos, 2000); // Punto 5c: Tasa de 2s
+    setInterval(actualizarDatos, 2000); 
 });
 
 async function actualizarDatos() {
@@ -15,7 +15,6 @@ async function actualizarDatos() {
     } catch (e) { console.error("Error:", e); }
 }
 
-// FILTRADO DINÁMICO DE DISPOSITIVOS
 function filtrarPuertas() {
     const texto = document.getElementById("buscadorPuertas").value.toLowerCase();
     const tarjetas = document.querySelectorAll("#contenedorControl .col-md-4");
@@ -25,6 +24,7 @@ function filtrarPuertas() {
     });
 }
 
+// RENDER ADMIN CON BOTÓN EDITAR
 function renderAdmin(puertas) {
     const tabla = document.getElementById("tablaAdmin");
     if(!tabla) return;
@@ -32,9 +32,36 @@ function renderAdmin(puertas) {
     puertas.forEach(p => {
         tabla.innerHTML += `<tr>
             <td>${p.nombre}</td><td>${p.ubicacion}</td>
-            <td><button class="btn btn-outline-danger btn-sm" onclick="eliminarPuerta('${p.id}')">Baja</button></td>
+            <td>
+                <button class="btn btn-outline-warning btn-sm me-1" onclick="prepararEdicion('${p.id}')">Editar</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="eliminarPuerta('${p.id}')">Baja</button>
+            </td>
         </tr>`;
     });
+}
+
+// LÓGICA DE EDICIÓN
+async function prepararEdicion(id) {
+    const res = await fetch(`${API_URL}/${id}`);
+    const p = await res.json();
+    document.getElementById("editId").value = p.id;
+    document.getElementById("editNombre").value = p.nombre;
+    document.getElementById("editUbicacion").value = p.ubicacion;
+    new bootstrap.Modal(document.getElementById('modalEditar')).show();
+}
+
+async function guardarCambios() {
+    const id = document.getElementById("editId").value;
+    const n = document.getElementById("editNombre").value;
+    const u = document.getElementById("editUbicacion").value;
+    
+    await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ nombre: n, ubicacion: u })
+    });
+    bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+    actualizarDatos();
 }
 
 async function crearPuerta() {
@@ -82,7 +109,7 @@ function renderControl(puertas) {
                 </div>
             </div>`;
     });
-    filtrarPuertas(); // Mantiene el filtro aplicado tras el refresco
+    filtrarPuertas();
 }
 
 async function togglePuerta(id, estadoActual) {
