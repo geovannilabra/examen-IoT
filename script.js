@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function actualizarDatos() {
     try {
         const res = await fetch(API_URL);
-        const datos = await res.json();
+        const datos = await es.json();
         renderAdmin(datos);
         renderControl(datos);
         renderMonitoreo(datos);
