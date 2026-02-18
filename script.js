@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function actualizarDatos() {
     try {
         const res = await fetch(API_URL);
-        const datos = await es.json();
+        const datos = await res.json();
         renderAdmin(datos);
         renderControl(datos);
         renderMonitoreo(datos);
@@ -139,14 +139,37 @@ function renderMonitoreo(puertas) {
     const grafico = document.getElementById("contenedorGrafico");
     const tabla = document.getElementById("tablaMonitoreo");
     if(!tabla || !grafico) return;
-    grafico.innerHTML = ""; tabla.innerHTML = "";
+
+    // Limpiamos el contenedor de las barras de arriba para que no estorben
+    grafico.innerHTML = ""; 
+    tabla.innerHTML = "";
+
     puertas.forEach(p => {
-        grafico.innerHTML += `<div class="col-md-4 mb-2"><small>${p.nombre}</small>
-            <div class="progress" style="height: 15px;"><div class="progress-bar ${p.bateria < 20 ? 'bg-danger' : 'bg-primary'}" 
-            style="width: ${p.bateria}%">${p.bateria}%</div></div></div>`;
-        tabla.innerHTML += `<tr><td class="text-primary fw-bold" style="cursor:pointer;" onclick="verDetalles('${p.id}')">🔍 ${p.nombre}</td>
-            <td><span class="badge ${p.estado ? 'bg-success' : 'bg-secondary'}">${p.estado ? 'ABIERTO' : 'SEGURO'}</span></td>
-            <td>${p.bateria}%</td><td>${p.fecha_act || "---"}</td><td>${p.hora_apertura || "---"}</td><td>${p.hora_cierre || "---"}</td></tr>`;
+        // Metemos la lógica de la batería directamente en una celda de la tabla
+        tabla.innerHTML += `
+            <tr>
+                <td class="text-primary fw-bold text-start" style="cursor:pointer;" onclick="verDetalles('${p.id}')">
+                    🔍 ${p.nombre}
+                </td>
+                <td>
+                    <span class="badge ${p.estado ? 'bg-success' : 'bg-secondary'}">
+                        ${p.estado ? 'ABIERTO' : 'SEGURO'}
+                    </span>
+                </td>
+                <td style="min-width: 120px;">
+                    <div class="d-flex align-items-center">
+                        <div class="progress w-100 me-2" style="height: 10px;">
+                            <div class="progress-bar ${p.bateria < 20 ? 'bg-danger' : 'bg-primary'}" 
+                                 style="width: ${p.bateria}%">
+                            </div>
+                        </div>
+                        <small class="fw-bold">${p.bateria}%</small>
+                    </div>
+                </td>
+                <td>${p.fecha_act || "---"}</td>
+                <td>${p.hora_apertura || "---"}</td>
+                <td>${p.hora_cierre || "---"}</td>
+            </tr>`;
     });
 }
 
