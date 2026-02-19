@@ -4,7 +4,7 @@ let totalLogs = 0;
 
 // Inicialización del sistema
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Cargar logs persistentes primero
+    // 1. Cargar logs persistentes al iniciar
     const logsPrevios = JSON.parse(localStorage.getItem("logs_sistema")) || [];
     const contenedor = document.getElementById("logContainer");
     
@@ -16,12 +16,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             contenedor.appendChild(div);
         });
         contenedor.scrollTop = contenedor.scrollHeight;
+        document.getElementById("logCounter").innerText = `${logsPrevios.length} EVENTOS`;
     }
 
-    // 2. Carga inmediata de datos
+    // 2. Carga inmediata de datos de la API
     await actualizarDatos(); 
     
-    // 3. Configurar intervalo
+    // 3. Configurar intervalo y registrar inicio
     setInterval(actualizarDatos, 5000); 
     registrarLog("Framework de seguridad activo - Monitoreo iniciado", "success");
 });
@@ -40,7 +41,7 @@ async function actualizarDatos() {
     }
 }
 
-// SECCIÓN 1: ADMINISTRACIÓN (Respetando tus colores originales)
+// SECCIONES DE RENDERIZADO
 function renderAdmin(puertas) {
     const tabla = document.getElementById("tablaAdmin");
     if(!tabla) return;
@@ -52,22 +53,15 @@ function renderAdmin(puertas) {
                     <div class="fw-bold text-black text-start">${p.nombre}</div>
                     <small class="text-muted d-block text-start">ID: ${p.id}</small>
                 </td>
-                <td class="text-start text-muted">
-                    <i class="bi bi-geo-alt me-1"></i>${p.ubicacion}
-                </td>
+                <td class="text-start text-muted"><i class="bi bi-geo-alt me-1"></i>${p.ubicacion}</td>
                 <td class="text-end pe-4">
-                    <button class="btn btn-sm text-warning" onclick="prepararEdicion('${p.id}')">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm text-danger" onclick="eliminarPuerta('${p.id}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                    <button class="btn btn-sm text-warning" onclick="prepararEdicion('${p.id}')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm text-danger" onclick="eliminarPuerta('${p.id}')"><i class="bi bi-trash"></i></button>
                 </td>
             </tr>`;
     });
 }
 
-// SECCIÓN 2: CONTROL
 function renderControl(puertas) {
     const contenedor = document.getElementById("contenedorControl");
     if(!contenedor) return;
@@ -76,13 +70,9 @@ function renderControl(puertas) {
         contenedor.innerHTML += `
             <div class="col-md-4 mb-4">
                 <div class="card card-access h-100 p-4 text-center">
-                    <div class="mb-3">
-                        <i class="bi ${p.estado ? 'bi-shield-exclamation text-warning' : 'bi-shield-check text-success'} fs-1"></i>
-                    </div>
+                    <div class="mb-3"><i class="bi ${p.estado ? 'bi-shield-exclamation text-warning' : 'bi-shield-check text-success'} fs-1"></i></div>
                     <h5 class="fw-bold text-white mb-1">${p.nombre}</h5>
-                    <p class="small fw-bold" style="color: ${p.estado ? '#ffc107' : '#00ca72'}">
-                        ${p.estado ? 'ACCESO ABIERTO' : 'TOTALMENTE PROTEGIDO'}
-                    </p>
+                    <p class="small fw-bold" style="color: ${p.estado ? '#ffc107' : '#00ca72'}">${p.estado ? 'ACCESO ABIERTO' : 'TOTALMENTE PROTEGIDO'}</p>
                     <div class="d-flex justify-content-center mt-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" style="width:3em; height:1.5em; cursor:pointer" 
@@ -94,7 +84,6 @@ function renderControl(puertas) {
     });
 }
 
-// SECCIÓN 3: MONITOREO
 function renderMonitoreo(puertas) {
     const tabla = document.getElementById("tablaMonitoreo");
     if(!tabla) return;
@@ -103,11 +92,7 @@ function renderMonitoreo(puertas) {
         tabla.innerHTML += `
             <tr class="align-middle">
                 <td class="ps-4 text-start">
-                    <div class="fw-bold text-black mb-0" 
-                         style="cursor: pointer; text-decoration: underline;" 
-                         onclick="verDetalles('${p.id}')">
-                         ${p.nombre || 'Área ' + p.id}
-                    </div>
+                    <div class="fw-bold text-black mb-0" style="cursor: pointer; text-decoration: underline;" onclick="verDetalles('${p.id}')">${p.nombre || 'Área ' + p.id}</div>
                     <small class="text-muted">ID: ${p.id}</small>
                 </td>
                 <td><span class="badge rounded-pill border border-success text-success py-2 px-3">${p.estado ? 'ABIERTO' : 'SEGURO'}</span></td>
@@ -124,6 +109,7 @@ function renderMonitoreo(puertas) {
     });
 }
 
+// LOGICA DE CONTROL Y CRUD
 async function togglePuerta(id, estadoActual) {
     const nuevoEstado = !estadoActual;
     const ahora = new Date();
@@ -153,13 +139,10 @@ async function togglePuerta(id, estadoActual) {
         localStorage.setItem(`lista_C_${id}`, JSON.stringify(hC.slice(0, 10)));
         localStorage.setItem(`contador_cerrar_${id}`, (parseInt(localStorage.getItem(`contador_cerrar_${id}`)) || 0) + 1);
         registrarLog(`Acceso cerrado y asegurado en dispositivo ID: ${id}`, "success");
-
         if (alertasActivas[id]) { clearTimeout(alertasActivas[id]); delete alertasActivas[id]; }
     }
 
-    await fetch(`${API_URL}/${id}`, { 
-        method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos) 
-    });
+    await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos) });
     actualizarDatos();
 }
 
@@ -185,10 +168,7 @@ async function crearPuerta() {
     const n = document.getElementById("nombreP").value;
     const u = document.getElementById("ubicacionP").value;
     if(!n || !u) return;
-    await fetch(API_URL, { 
-        method: 'POST', headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ nombre: n, ubicacion: u, estado: false, bateria: 100, fecha_act: new Date().toLocaleDateString() }) 
-    });
+    await fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nombre: n, ubicacion: u, estado: false, bateria: 100, fecha_act: new Date().toLocaleDateString() }) });
     document.getElementById("nombreP").value = ""; 
     document.getElementById("ubicacionP").value = "";
     actualizarDatos();
@@ -215,9 +195,7 @@ async function guardarCambios() {
     const id = document.getElementById("editId").value;
     const n = document.getElementById("editNombre").value;
     const u = document.getElementById("editUbicacion").value;
-    await fetch(`${API_URL}/${id}`, { 
-        method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nombre: n, ubicacion: u }) 
-    });
+    await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nombre: n, ubicacion: u }) });
     bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
     actualizarDatos();
     registrarLog(`Modificación de parámetros en ID: ${id}`, "warning");
@@ -232,12 +210,11 @@ function filtrarPuertas() {
     });
 }
 
-// SISTEMA DE AUDITORÍA PERSISTENTE
+// SISTEMA DE AUDITORÍA Y EXPORTACIÓN
 function registrarLog(mensaje, tipo = "info") {
     const contenedor = document.getElementById("logContainer");
     const contador = document.getElementById("logCounter");
     if(!contenedor) return;
-
     const ahora = new Date();
     const tiempo = ahora.toLocaleTimeString();
     let color = "text-white-50";
@@ -246,7 +223,6 @@ function registrarLog(mensaje, tipo = "info") {
     if(tipo === "danger") color = "text-danger";
 
     const textoLog = `[${tiempo}] > ${mensaje.toUpperCase()}`;
-    
     let logsGuardados = JSON.parse(localStorage.getItem("logs_sistema")) || [];
     logsGuardados.push({ texto: textoLog, clase: color });
     localStorage.setItem("logs_sistema", JSON.stringify(logsGuardados.slice(-20)));
@@ -256,6 +232,41 @@ function registrarLog(mensaje, tipo = "info") {
     nuevoLog.innerHTML = textoLog;
     contenedor.appendChild(nuevoLog);
     contenedor.scrollTop = contenedor.scrollHeight;
-
     contador.innerText = `${logsGuardados.length} EVENTOS`;
+}
+
+function descargarReporte() {
+    const logs = JSON.parse(localStorage.getItem("logs_sistema")) || [];
+    
+    if (logs.length === 0) {
+        alert("No hay datos de auditoría para exportar.");
+        return;
+    }
+
+    // 1. Crear el encabezado del CSV
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "FECHA Y HORA,DESCRIPCION DEL EVENTO\n"; // Títulos de columnas
+
+    // 2. Formatear cada log para Excel
+    logs.forEach(log => {
+        // Separamos la hora del mensaje para ponerlos en columnas distintas
+        // El formato original es: [HH:MM:SS] > MENSAJE
+        let fila = log.texto.replace("[", "").replace("]", "").replace(" > ", ",");
+        csvContent += fila + "\n";
+    });
+
+    // 3. Crear el enlace de descarga
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    
+    // Nombre del archivo con extensión .csv para Excel
+    link.setAttribute("download", `Bitacora_Seguridad_${new Date().toLocaleDateString()}.csv`);
+    document.body.appendChild(link);
+    
+    // 4. Ejecutar descarga
+    link.click();
+    document.body.removeChild(link);
+    
+    registrarLog("Reporte generado en formato Excel (CSV)", "success");
 }
