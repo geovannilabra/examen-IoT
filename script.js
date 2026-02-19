@@ -1,10 +1,12 @@
 const API_URL = "https://698a177cc04d974bc6a15386.mockapi.io/api/v1/puertas";
 let alertasActivas = {};
+let totalLogs = 0; // Movido afuera para acceso global
 
 // Inicialización del sistema
 document.addEventListener("DOMContentLoaded", () => {
     actualizarDatos();
     setInterval(actualizarDatos, 5000); 
+    registrarLog("Sistema iniciado y listo para monitoreo", "info");
 });
 
 // Obtención de datos de la API
@@ -17,6 +19,7 @@ async function actualizarDatos() {
         renderMonitoreo(datos);
     } catch (e) { 
         console.error("Error al conectar con la API:", e); 
+        registrarLog("Error de conexión con la API externa", "danger");
     }
 }
 
@@ -29,7 +32,7 @@ function renderAdmin(puertas) {
         tabla.innerHTML += `
             <tr>
                 <td class="ps-4">
-                    <div class="fw-bold text-black text-start">${p.nombre}</div>
+                    <div class="fw-bold text-white text-start">${p.nombre}</div>
                     <small class="text-muted d-block text-start">ID: ${p.id}</small>
                 </td>
                 <td class="text-start text-muted">
@@ -83,7 +86,7 @@ function renderMonitoreo(puertas) {
         tabla.innerHTML += `
             <tr class="align-middle">
                 <td class="ps-4 text-start">
-                    <div class="fw-bold text-black mb-0" 
+                    <div class="fw-bold text-white mb-0" 
                          style="cursor: pointer; text-decoration: underline;" 
                          onclick="verDetalles('${p.id}')">
                          ${p.nombre || 'Área ' + p.id}
@@ -100,12 +103,12 @@ function renderMonitoreo(puertas) {
                         <div class="progress flex-grow-1 me-2" style="height:8px">
                             <div class="progress-bar" style="width:${p.bateria}%"></div>
                         </div>
-                        <span class="small fw-bold text-black">${p.bateria}%</span>
+                        <span class="small fw-bold text-white">${p.bateria}%</span>
                     </div>
                 </td>
                 <td class="text-muted small">${p.fecha_act || '---'}</td>
-                <td class="fw-bold text-black">${p.hora_apertura || '--:--'}</td>
-                <td class="fw-bold text-black">${p.hora_cierre || '--:--'}</td>
+                <td class="fw-bold text-white">${p.hora_apertura || '--:--'}</td>
+                <td class="fw-bold text-white">${p.hora_cierre || '--:--'}</td>
             </tr>`;
     });
 }
@@ -119,25 +122,31 @@ async function togglePuerta(id, estadoActual) {
 
     if (nuevoEstado) {
         datos.hora_apertura = hora;
-        // Guardar en historial de LocalStorage (Máximo 10 registros)
         let hA = JSON.parse(localStorage.getItem(`lista_A_${id}`)) || [];
         hA.unshift(hora);
         localStorage.setItem(`lista_A_${id}`, JSON.stringify(hA.slice(0, 10)));
         localStorage.setItem(`contador_abrir_${id}`, (parseInt(localStorage.getItem(`contador_abrir_${id}`)) || 0) + 1);
 
-        // Notificación de puerta abierta por más de 10 segundos
+        // Registro en Auditoría
+        registrarLog(`Acceso concedido en dispositivo ID: ${id}`, "warning");
+
         alertasActivas[id] = setTimeout(async () => {
             const res = await fetch(`${API_URL}/${id}`);
             const p = await res.json();
-            if (p.estado) alert(`⚠️ SEGURIDAD: "${p.nombre}" ha permanecido abierta por más de 10 segundos.`);
+            if (p.estado) {
+                alert(`⚠️ SEGURIDAD: "${p.nombre}" ha permanecido abierta por más de 10 segundos.`);
+                registrarLog(`Alerta crítica: Puerta ${id} abierta por tiempo excesivo`, "danger");
+            }
         }, 10000);
     } else {
         datos.hora_cierre = hora;
-        // Guardar cierre en LocalStorage
         let hC = JSON.parse(localStorage.getItem(`lista_C_${id}`)) || [];
         hC.unshift(hora);
         localStorage.setItem(`lista_C_${id}`, JSON.stringify(hC.slice(0, 10)));
         localStorage.setItem(`contador_cerrar_${id}`, (parseInt(localStorage.getItem(`contador_cerrar_${id}`)) || 0) + 1);
+
+        // Registro en Auditoría
+        registrarLog(`Acceso cerrado y asegurado en dispositivo ID: ${id}`, "success");
 
         if (alertasActivas[id]) { 
             clearTimeout(alertasActivas[id]); 
@@ -153,7 +162,6 @@ async function togglePuerta(id, estadoActual) {
     actualizarDatos();
 }
 
-// FUNCIÓN PARA VER EL HISTORIAL (LOS 10 ÚLTIMOS)
 async function verDetalles(id) {
     try {
         const res = await fetch(`${API_URL}/${id}`);
@@ -164,7 +172,6 @@ async function verDetalles(id) {
         let listaA = JSON.parse(localStorage.getItem(`lista_A_${id}`)) || [];
         let listaC = JSON.parse(localStorage.getItem(`lista_C_${id}`)) || [];
         
-        // FORZAMOS 10 FILAS: Sin "if", para que el scroll del CSS funcione
         for(let i = 0; i < 10; i++) {
             cuerpoTabla.innerHTML += `
                 <tr>
@@ -177,12 +184,13 @@ async function verDetalles(id) {
         document.getElementById("contadorAperturas").innerText = localStorage.getItem(`contador_abrir_${id}`) || 0;
         document.getElementById("contadorCierres").innerText = localStorage.getItem(`contador_cerrar_${id}`) || 0;
         
+        registrarLog(`Consultando historial de ID: ${id}`, "info");
         new bootstrap.Modal(document.getElementById('modalDetalle')).show();
     } catch (e) {
         console.error("Error visualizando historial:", e);
     }
 }
-// FUNCIONES CRUD RESTANTES
+
 async function crearPuerta() {
     const n = document.getElementById("nombreP").value;
     const u = document.getElementById("ubicacionP").value;
@@ -195,12 +203,14 @@ async function crearPuerta() {
     document.getElementById("nombreP").value = ""; 
     document.getElementById("ubicacionP").value = "";
     actualizarDatos();
+    registrarLog(`Nuevo punto de acceso registrado: "${n}"`, "success");
 }
 
 async function eliminarPuerta(id) {
     if(!confirm("¿Desea eliminar este dispositivo de seguridad?")) return;
     await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
     actualizarDatos();
+    registrarLog(`Eliminación forzada de dispositivo ID: ${id}`, "danger");
 }
 
 async function prepararEdicion(id) {
@@ -223,6 +233,7 @@ async function guardarCambios() {
     });
     bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
     actualizarDatos();
+    registrarLog(`Modificación de parámetros en ID: ${id}`, "warning");
 }
 
 function filtrarPuertas() {
@@ -232,4 +243,29 @@ function filtrarPuertas() {
         const nombre = t.querySelector("h5").innerText.toLowerCase();
         t.style.display = nombre.includes(texto) ? "block" : "none";
     });
+}
+
+// FUNCIÓN DE LOGS (CORRECTAMENTE UBICADA)
+function registrarLog(mensaje, tipo = "info") {
+    const contenedor = document.getElementById("logContainer");
+    const contador = document.getElementById("logCounter");
+    if(!contenedor) return;
+
+    const ahora = new Date();
+    const tiempo = ahora.toLocaleTimeString();
+    
+    let color = "text-white-50";
+    if(tipo === "success") color = "text-success";
+    if(tipo === "warning") color = "text-warning";
+    if(tipo === "danger") color = "text-danger";
+
+    const nuevoLog = document.createElement("div");
+    nuevoLog.className = `mb-1 ${color}`;
+    nuevoLog.innerHTML = `<span>[${tiempo}]</span> > ${mensaje.toUpperCase()}`;
+    
+    contenedor.appendChild(nuevoLog);
+    contenedor.scrollTop = contenedor.scrollHeight;
+
+    totalLogs++;
+    contador.innerText = `${totalLogs} EVENTOS`;
 }
