@@ -2,13 +2,44 @@ const API_URL = "https://698a177cc04d974bc6a15386.mockapi.io/api/v1/puertas";
 let alertasActivas = {};
 let totalLogs = 0; 
 
+function verificarReinicioDiario() {
+    const fechaActual = new Date().toLocaleDateString();
+    const ultimaFechaGuardada = localStorage.getItem("ultima_fecha_actividad");
+
+    // Si existe una fecha guardada y es diferente a la de hoy, reiniciamos todo
+    if (ultimaFechaGuardada && ultimaFechaGuardada !== fechaActual) {
+        // Borrar logs de terminal
+        localStorage.removeItem("logs_sistema");
+        // Borrar contadores de las puertas (aperturas/cierres)
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+            if (key.includes("contador_") || key.includes("lista_") || key.includes("conteo_total")) {
+                localStorage.removeItem(key);
+            }
+        });
+        
+        console.log("Sistema reiniciado: Nuevo día detectado.");
+        location.reload(); // Recarga la página para mostrar todo en cero
+    }
+
+    // Actualizar la fecha de hoy como la última fecha de actividad
+    localStorage.setItem("ultima_fecha_actividad", fechaActual);
+}
+
+
+
+
 // Inicialización del sistema
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Cargar logs persistentes al iniciar
+    // 1. Verificar si cambió el día antes de cargar nada
+    verificarReinicioDiario();
+
+    // 2. Cargar logs guardados del día actual
     const logsPrevios = JSON.parse(localStorage.getItem("logs_sistema")) || [];
     const contenedor = document.getElementById("logContainer");
     
     if(contenedor) {
+        // Aquí cargamos TODO el historial del día en la terminal
         logsPrevios.forEach(log => {
             const div = document.createElement("div");
             div.className = `mb-1 ${log.clase}`;
@@ -16,15 +47,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             contenedor.appendChild(div);
         });
         contenedor.scrollTop = contenedor.scrollHeight;
-        document.getElementById("logCounter").innerText = `${logsPrevios.length} EVENTOS`;
     }
 
-    // 2. Carga inmediata de datos de la API
     await actualizarDatos(); 
-    
-    // 3. Configurar intervalo y registrar inicio
     setInterval(actualizarDatos, 5000); 
-    registrarLog("Framework de seguridad activo - Monitoreo iniciado", "success");
+    registrarLog("Sistema de monitoreo diario activo", "success");
 });
 
 // Obtención de datos de la API
@@ -217,7 +244,7 @@ function registrarLog(mensaje, tipo = "info") {
     if(!contenedor) return;
 
     const ahora = new Date();
-    const tiempo = ahora.toLocaleTimeString();
+    const tiempo = ahora.toLocaleTimeString(); // Formato 24h
     
     let color = "text-white-50";
     if(tipo === "success") color = "text-success";
@@ -226,29 +253,22 @@ function registrarLog(mensaje, tipo = "info") {
 
     const textoLog = `[${tiempo}] > ${mensaje.toUpperCase()}`;
     
-    // 1. Manejo de PERSISTENCIA
+    // Guardar en la lista (Sin límites para que el Excel tenga TODO lo del día)
     let logsGuardados = JSON.parse(localStorage.getItem("logs_sistema")) || [];
     logsGuardados.push({ texto: textoLog, clase: color });
-    
-    // Guardamos solo los últimos 20 para rendimiento, pero...
-    localStorage.setItem("logs_sistema", JSON.stringify(logsGuardados.slice(-20)));
+    localStorage.setItem("logs_sistema", JSON.stringify(logsGuardados));
 
-    // 2. Manejo de CONTADOR GLOBAL
-    // Usamos una variable en localStorage para que el número no se resetee al recargar
-    let conteoHistorico = parseInt(localStorage.getItem("conteo_total_logs")) || 0;
-    conteoHistorico++;
-    localStorage.setItem("conteo_total_logs", conteoHistorico);
-
-    // 3. MOSTRAR EN PANTALLA
+    // Mostrar en la terminal visual
     const nuevoLog = document.createElement("div");
     nuevoLog.className = `mb-1 ${color}`;
     nuevoLog.innerHTML = textoLog;
-    
     contenedor.appendChild(nuevoLog);
+    
+    // Auto-scroll al último evento
     contenedor.scrollTop = contenedor.scrollHeight;
 
-    // Actualizamos el badge con el total histórico real
-    contador.innerText = `${conteoHistorico} EVENTOS`;
+    // Contador muestra el total de eventos del día
+    contador.innerText = `${logsGuardados.length} EVENTOS`;
 }
 
 function descargarReporte() {
