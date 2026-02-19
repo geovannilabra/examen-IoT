@@ -243,30 +243,28 @@ function descargarReporte() {
         return;
     }
 
-    // 1. Crear el encabezado del CSV
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "FECHA Y HORA,DESCRIPCION DEL EVENTO\n"; // Títulos de columnas
-
-    // 2. Formatear cada log para Excel
+    // 1. Crear el contenido CSV con BOM para que Excel detecte los acentos correctamente
+    let csvContent = "FECHA Y HORA,DESCRIPCION DEL EVENTO\n";
     logs.forEach(log => {
-        // Separamos la hora del mensaje para ponerlos en columnas distintas
-        // El formato original es: [HH:MM:SS] > MENSAJE
         let fila = log.texto.replace("[", "").replace("]", "").replace(" > ", ",");
         csvContent += fila + "\n";
     });
 
-    // 3. Crear el enlace de descarga
-    const encodedUri = encodeURI(csvContent);
+    // 2. Usar un Blob (Binary Large Object) para mayor compatibilidad
+    // Incluimos el carácter \uFEFF para que Excel reconozca la codificación UTF-8 automáticamente
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // 3. Crear un link temporal seguro
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    
-    // Nombre del archivo con extensión .csv para Excel
-    link.setAttribute("download", `Bitacora_Seguridad_${new Date().toLocaleDateString()}.csv`);
-    document.body.appendChild(link);
-    
-    // 4. Ejecutar descarga
-    link.click();
-    document.body.removeChild(link);
-    
-    registrarLog("Reporte generado en formato Excel (CSV)", "success");
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Bitacora_Seguridad_${new Date().toLocaleDateString()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        registrarLog("Reporte exportado exitosamente (Protocolo Seguro)", "success");
+    }
 }
