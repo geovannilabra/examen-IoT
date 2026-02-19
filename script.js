@@ -3,10 +3,15 @@ let alertasActivas = {};
 let totalLogs = 0; // Movido afuera para acceso global
 
 // Inicialización del sistema
-document.addEventListener("DOMContentLoaded", () => {
-    actualizarDatos();
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Ejecutamos inmediatamente para que no tarde nada en iniciar
+    await actualizarDatos(); 
+    
+    // 2. Registramos el inicio en la auditoría
+    registrarLog("Framework de seguridad activo - Monitoreo iniciado", "success");
+
+    // 3. Dejamos el intervalo solo para las actualizaciones automáticas cada 5s
     setInterval(actualizarDatos, 5000); 
-    registrarLog("Sistema iniciado y listo para monitoreo", "info");
 });
 
 // Obtención de datos de la API
