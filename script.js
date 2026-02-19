@@ -217,7 +217,7 @@ function registrarLog(mensaje, tipo = "info") {
     if(!contenedor) return;
 
     const ahora = new Date();
-    const tiempo = ahora.toLocaleTimeString('es-MX', { hour12: true });
+    const tiempo = ahora.toLocaleTimeString();
     
     let color = "text-white-50";
     if(tipo === "success") color = "text-success";
