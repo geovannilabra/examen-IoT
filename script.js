@@ -37,7 +37,7 @@ function renderAdmin(puertas) {
         tabla.innerHTML += `
             <tr>
                 <td class="ps-4">
-                    <div class="fw-bold text-white text-start">${p.nombre}</div>
+                    <div class="fw-bold text-black text-start">${p.nombre}</div>
                     <small class="text-muted d-block text-start">ID: ${p.id}</small>
                 </td>
                 <td class="text-start text-muted">
@@ -91,7 +91,7 @@ function renderMonitoreo(puertas) {
         tabla.innerHTML += `
             <tr class="align-middle">
                 <td class="ps-4 text-start">
-                    <div class="fw-bold text-white mb-0" 
+                    <div class="fw-bold text-black mb-0" 
                          style="cursor: pointer; text-decoration: underline;" 
                          onclick="verDetalles('${p.id}')">
                          ${p.nombre || 'Área ' + p.id}
@@ -108,12 +108,12 @@ function renderMonitoreo(puertas) {
                         <div class="progress flex-grow-1 me-2" style="height:8px">
                             <div class="progress-bar" style="width:${p.bateria}%"></div>
                         </div>
-                        <span class="small fw-bold text-white">${p.bateria}%</span>
+                        <span class="small fw-bold text-black">${p.bateria}%</span>
                     </div>
                 </td>
                 <td class="text-muted small">${p.fecha_act || '---'}</td>
-                <td class="fw-bold text-white">${p.hora_apertura || '--:--'}</td>
-                <td class="fw-bold text-white">${p.hora_cierre || '--:--'}</td>
+                <td class="fw-bold text-black">${p.hora_apertura || '--:--'}</td>
+                <td class="fw-bold text-black">${p.hora_cierre || '--:--'}</td>
             </tr>`;
     });
 }
