@@ -215,24 +215,40 @@ function registrarLog(mensaje, tipo = "info") {
     const contenedor = document.getElementById("logContainer");
     const contador = document.getElementById("logCounter");
     if(!contenedor) return;
+
     const ahora = new Date();
-    const tiempo = ahora.toLocaleTimeString();
+    const tiempo = ahora.toLocaleTimeString('es-MX', { hour12: true });
+    
     let color = "text-white-50";
     if(tipo === "success") color = "text-success";
     if(tipo === "warning") color = "text-warning";
     if(tipo === "danger") color = "text-danger";
 
     const textoLog = `[${tiempo}] > ${mensaje.toUpperCase()}`;
+    
+    // 1. Manejo de PERSISTENCIA
     let logsGuardados = JSON.parse(localStorage.getItem("logs_sistema")) || [];
     logsGuardados.push({ texto: textoLog, clase: color });
+    
+    // Guardamos solo los últimos 20 para rendimiento, pero...
     localStorage.setItem("logs_sistema", JSON.stringify(logsGuardados.slice(-20)));
 
+    // 2. Manejo de CONTADOR GLOBAL
+    // Usamos una variable en localStorage para que el número no se resetee al recargar
+    let conteoHistorico = parseInt(localStorage.getItem("conteo_total_logs")) || 0;
+    conteoHistorico++;
+    localStorage.setItem("conteo_total_logs", conteoHistorico);
+
+    // 3. MOSTRAR EN PANTALLA
     const nuevoLog = document.createElement("div");
     nuevoLog.className = `mb-1 ${color}`;
     nuevoLog.innerHTML = textoLog;
+    
     contenedor.appendChild(nuevoLog);
     contenedor.scrollTop = contenedor.scrollHeight;
-    contador.innerText = `${logsGuardados.length} EVENTOS`;
+
+    // Actualizamos el badge con el total histórico real
+    contador.innerText = `${conteoHistorico} EVENTOS`;
 }
 
 function descargarReporte() {
