@@ -2,54 +2,61 @@ body {
     background-color: #f1f5f9;
     font-family: 'Inter', sans-serif;
     color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
 }
 
 .fw-800 { font-weight: 800; }
 
-/* Navbar Dark */
+/* Navbar */
 .navbar {
     background: #0f172a !important;
     border-bottom: 4px solid #3b82f6;
 }
 
-/* Tabs Estilo Segmentado */
+/* Tabs */
 .nav-pills .nav-link {
     color: #64748b;
     font-weight: 600;
-    border-radius: 10px;
 }
 .nav-pills .nav-link.active {
     background: #3b82f6 !important;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
-/* Cards Profesionales */
+/* Cards */
 .card-access {
     border: none;
     border-radius: 20px;
     background: white;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
 }
 .card-access:hover {
-    transform: translateY(-8px);
+    transform: translateY(-5px);
     box-shadow: 0 15px 30px rgba(0,0,0,0.08);
 }
 
-/* Batería en Tabla */
+/* Footer Sticky */
+.footer {
+    background-color: #0f172a !important;
+    flex-shrink: 0;
+}
+
+.tracking-wider {
+    letter-spacing: 1.5px;
+}
+
+/* Progress Bars */
 .progress {
-    background-color: #f1f5f9;
+    background-color: #e2e8f0;
     border-radius: 50px;
 }
 .progress-bar {
     border-radius: 50px;
     font-size: 0.7rem;
-    font-weight: bold;
-}
-
-/* Badge de Estatus */
-.badge-status {
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    padding: 0.5em 1.2em;
-    border-radius: 6px;
 }
