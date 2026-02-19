@@ -1,17 +1,29 @@
 const API_URL = "https://698a177cc04d974bc6a15386.mockapi.io/api/v1/puertas";
 let alertasActivas = {};
-let totalLogs = 0; // Movido afuera para acceso global
+let totalLogs = 0; 
 
 // Inicialización del sistema
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Ejecutamos inmediatamente para que no tarde nada en iniciar
+    // 1. Cargar logs persistentes primero
+    const logsPrevios = JSON.parse(localStorage.getItem("logs_sistema")) || [];
+    const contenedor = document.getElementById("logContainer");
+    
+    if(contenedor) {
+        logsPrevios.forEach(log => {
+            const div = document.createElement("div");
+            div.className = `mb-1 ${log.clase}`;
+            div.innerHTML = log.texto;
+            contenedor.appendChild(div);
+        });
+        contenedor.scrollTop = contenedor.scrollHeight;
+    }
+
+    // 2. Carga inmediata de datos
     await actualizarDatos(); 
     
-    // 2. Registramos el inicio en la auditoría
-    registrarLog("Framework de seguridad activo - Monitoreo iniciado", "success");
-
-    // 3. Dejamos el intervalo solo para las actualizaciones automáticas cada 5s
+    // 3. Configurar intervalo
     setInterval(actualizarDatos, 5000); 
+    registrarLog("Framework de seguridad activo - Monitoreo iniciado", "success");
 });
 
 // Obtención de datos de la API
@@ -28,7 +40,7 @@ async function actualizarDatos() {
     }
 }
 
-// SECCIÓN 1: ADMINISTRACIÓN (CRUD)
+// SECCIÓN 1: ADMINISTRACIÓN (Respetando tus colores originales)
 function renderAdmin(puertas) {
     const tabla = document.getElementById("tablaAdmin");
     if(!tabla) return;
@@ -55,7 +67,7 @@ function renderAdmin(puertas) {
     });
 }
 
-// SECCIÓN 2: PANEL DE AUTORIZACIÓN (TARJETAS ESTILO AVG)
+// SECCIÓN 2: CONTROL
 function renderControl(puertas) {
     const contenedor = document.getElementById("contenedorControl");
     if(!contenedor) return;
@@ -82,7 +94,7 @@ function renderControl(puertas) {
     });
 }
 
-// SECCIÓN 3: MONITOREO (CON VÍNCULO AL HISTORIAL)
+// SECCIÓN 3: MONITOREO
 function renderMonitoreo(puertas) {
     const tabla = document.getElementById("tablaMonitoreo");
     if(!tabla) return;
@@ -98,16 +110,10 @@ function renderMonitoreo(puertas) {
                     </div>
                     <small class="text-muted">ID: ${p.id}</small>
                 </td>
-                <td>
-                    <span class="badge rounded-pill border border-success text-success py-2 px-3">
-                        ${p.estado ? 'ABIERTO' : 'SEGURO'}
-                    </span>
-                </td>
+                <td><span class="badge rounded-pill border border-success text-success py-2 px-3">${p.estado ? 'ABIERTO' : 'SEGURO'}</span></td>
                 <td>
                     <div class="d-flex align-items-center" style="min-width:140px">
-                        <div class="progress flex-grow-1 me-2" style="height:8px">
-                            <div class="progress-bar" style="width:${p.bateria}%"></div>
-                        </div>
+                        <div class="progress flex-grow-1 me-2" style="height:8px"><div class="progress-bar" style="width:${p.bateria}%"></div></div>
                         <span class="small fw-bold text-black">${p.bateria}%</span>
                     </div>
                 </td>
@@ -118,7 +124,6 @@ function renderMonitoreo(puertas) {
     });
 }
 
-// LÓGICA DE CONTROL Y NOTIFICACIÓN DE 10 SEG
 async function togglePuerta(id, estadoActual) {
     const nuevoEstado = !estadoActual;
     const ahora = new Date();
@@ -131,8 +136,6 @@ async function togglePuerta(id, estadoActual) {
         hA.unshift(hora);
         localStorage.setItem(`lista_A_${id}`, JSON.stringify(hA.slice(0, 10)));
         localStorage.setItem(`contador_abrir_${id}`, (parseInt(localStorage.getItem(`contador_abrir_${id}`)) || 0) + 1);
-
-        // Registro en Auditoría
         registrarLog(`Acceso concedido en dispositivo ID: ${id}`, "warning");
 
         alertasActivas[id] = setTimeout(async () => {
@@ -149,20 +152,13 @@ async function togglePuerta(id, estadoActual) {
         hC.unshift(hora);
         localStorage.setItem(`lista_C_${id}`, JSON.stringify(hC.slice(0, 10)));
         localStorage.setItem(`contador_cerrar_${id}`, (parseInt(localStorage.getItem(`contador_cerrar_${id}`)) || 0) + 1);
-
-        // Registro en Auditoría
         registrarLog(`Acceso cerrado y asegurado en dispositivo ID: ${id}`, "success");
 
-        if (alertasActivas[id]) { 
-            clearTimeout(alertasActivas[id]); 
-            delete alertasActivas[id]; 
-        }
+        if (alertasActivas[id]) { clearTimeout(alertasActivas[id]); delete alertasActivas[id]; }
     }
 
     await fetch(`${API_URL}/${id}`, { 
-        method: 'PUT', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify(datos) 
+        method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos) 
     });
     actualizarDatos();
 }
@@ -173,27 +169,16 @@ async function verDetalles(id) {
         const p = await res.json();
         const cuerpoTabla = document.getElementById("cuerpoTablaDetalle");
         cuerpoTabla.innerHTML = "";
-        
         let listaA = JSON.parse(localStorage.getItem(`lista_A_${id}`)) || [];
         let listaC = JSON.parse(localStorage.getItem(`lista_C_${id}`)) || [];
-        
         for(let i = 0; i < 10; i++) {
-            cuerpoTabla.innerHTML += `
-                <tr>
-                    <td class="text-muted small">${p.fecha_act || new Date().toLocaleDateString()}</td>
-                    <td class="text-success fw-bold">${listaA[i] || '---'}</td>
-                    <td class="text-danger fw-bold">${listaC[i] || '---'}</td>
-                </tr>`;
+            cuerpoTabla.innerHTML += `<tr><td class="text-muted small">${p.fecha_act || new Date().toLocaleDateString()}</td><td class="text-success fw-bold">${listaA[i] || '---'}</td><td class="text-danger fw-bold">${listaC[i] || '---'}</td></tr>`;
         }
-        
         document.getElementById("contadorAperturas").innerText = localStorage.getItem(`contador_abrir_${id}`) || 0;
         document.getElementById("contadorCierres").innerText = localStorage.getItem(`contador_cerrar_${id}`) || 0;
-        
         registrarLog(`Consultando historial de ID: ${id}`, "info");
         new bootstrap.Modal(document.getElementById('modalDetalle')).show();
-    } catch (e) {
-        console.error("Error visualizando historial:", e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 async function crearPuerta() {
@@ -201,8 +186,7 @@ async function crearPuerta() {
     const u = document.getElementById("ubicacionP").value;
     if(!n || !u) return;
     await fetch(API_URL, { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
+        method: 'POST', headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({ nombre: n, ubicacion: u, estado: false, bateria: 100, fecha_act: new Date().toLocaleDateString() }) 
     });
     document.getElementById("nombreP").value = ""; 
@@ -212,7 +196,7 @@ async function crearPuerta() {
 }
 
 async function eliminarPuerta(id) {
-    if(!confirm("¿Desea eliminar este dispositivo de seguridad?")) return;
+    if(!confirm("¿Desea eliminar este dispositivo?")) return;
     await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
     actualizarDatos();
     registrarLog(`Eliminación forzada de dispositivo ID: ${id}`, "danger");
@@ -232,9 +216,7 @@ async function guardarCambios() {
     const n = document.getElementById("editNombre").value;
     const u = document.getElementById("editUbicacion").value;
     await fetch(`${API_URL}/${id}`, { 
-        method: 'PUT', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ nombre: n, ubicacion: u }) 
+        method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nombre: n, ubicacion: u }) 
     });
     bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
     actualizarDatos();
@@ -250,7 +232,7 @@ function filtrarPuertas() {
     });
 }
 
-// FUNCIÓN DE LOGS (CORRECTAMENTE UBICADA)
+// SISTEMA DE AUDITORÍA PERSISTENTE
 function registrarLog(mensaje, tipo = "info") {
     const contenedor = document.getElementById("logContainer");
     const contador = document.getElementById("logCounter");
@@ -258,19 +240,22 @@ function registrarLog(mensaje, tipo = "info") {
 
     const ahora = new Date();
     const tiempo = ahora.toLocaleTimeString();
-    
     let color = "text-white-50";
     if(tipo === "success") color = "text-success";
     if(tipo === "warning") color = "text-warning";
     if(tipo === "danger") color = "text-danger";
 
+    const textoLog = `[${tiempo}] > ${mensaje.toUpperCase()}`;
+    
+    let logsGuardados = JSON.parse(localStorage.getItem("logs_sistema")) || [];
+    logsGuardados.push({ texto: textoLog, clase: color });
+    localStorage.setItem("logs_sistema", JSON.stringify(logsGuardados.slice(-20)));
+
     const nuevoLog = document.createElement("div");
     nuevoLog.className = `mb-1 ${color}`;
-    nuevoLog.innerHTML = `<span>[${tiempo}]</span> > ${mensaje.toUpperCase()}`;
-    
+    nuevoLog.innerHTML = textoLog;
     contenedor.appendChild(nuevoLog);
     contenedor.scrollTop = contenedor.scrollHeight;
 
-    totalLogs++;
-    contador.innerText = `${totalLogs} EVENTOS`;
+    contador.innerText = `${logsGuardados.length} EVENTOS`;
 }
