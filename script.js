@@ -164,15 +164,14 @@ async function verDetalles(id) {
         let listaA = JSON.parse(localStorage.getItem(`lista_A_${id}`)) || [];
         let listaC = JSON.parse(localStorage.getItem(`lista_C_${id}`)) || [];
         
+        // FORZAMOS 10 FILAS: Sin "if", para que el scroll del CSS funcione
         for(let i = 0; i < 10; i++) {
-            if (listaA[i] || listaC[i]) {
-                cuerpoTabla.innerHTML += `
-                    <tr>
-                        <td>${p.fecha_act || new Date().toLocaleDateString()}</td>
-                        <td class="text-success fw-bold">${listaA[i] || '---'}</td>
-                        <td class="text-danger fw-bold">${listaC[i] || '---'}</td>
-                    </tr>`;
-            }
+            cuerpoTabla.innerHTML += `
+                <tr>
+                    <td class="text-muted small">${p.fecha_act || new Date().toLocaleDateString()}</td>
+                    <td class="text-success fw-bold">${listaA[i] || '---'}</td>
+                    <td class="text-danger fw-bold">${listaC[i] || '---'}</td>
+                </tr>`;
         }
         
         document.getElementById("contadorAperturas").innerText = localStorage.getItem(`contador_abrir_${id}`) || 0;
@@ -180,10 +179,9 @@ async function verDetalles(id) {
         
         new bootstrap.Modal(document.getElementById('modalDetalle')).show();
     } catch (e) {
-        console.error("Error al cargar historial:", e);
+        console.error("Error visualizando historial:", e);
     }
 }
-
 // FUNCIONES CRUD RESTANTES
 async function crearPuerta() {
     const n = document.getElementById("nombreP").value;

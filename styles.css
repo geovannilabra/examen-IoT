@@ -1,12 +1,13 @@
 :root {
-    --avg-bg: #181d23;
-    --avg-card: #22272e;
-    --avg-green: #00ca72;
-    --avg-text: #adbac7;
-    --avg-border: #444c56;
+    --avg-bg: #181d23;         /* Fondo oscuro profundo */
+    --avg-card: #22272e;       /* Gris azulado de tarjetas */
+    --avg-green: #00ca72;      /* Verde neón distintivo */
+    --avg-text: #00ca75;       /* Gris claro para textos */
+    --avg-border: #90969d;     /* Color de bordes sutiles */
+    --avg-blue: #020ee1;       /* Azul para IDs y acentos */
 }
 
-/* Configuración para Sticky Footer */
+/* Configuración estructural para Sticky Footer */
 html, body {
     height: 100%;
 }
@@ -24,14 +25,14 @@ main {
     flex: 1 0 auto;
 }
 
-/* Navbar y Footer */
+/* NAVBAR Y FOOTER */
 .navbar, .footer {
     background-color: #22272e !important;
     border-bottom: 3px solid var(--avg-green);
     flex-shrink: 0;
 }
 
-/* Tabs Estilo Dark */
+/* TABS ESTILO DARK */
 .nav-pills { background: #22272e; padding: 5px; border-radius: 12px; }
 .nav-pills .nav-link { color: var(--avg-text); font-weight: 600; }
 .nav-pills .nav-link.active {
@@ -41,7 +42,7 @@ main {
     border-radius: 0;
 }
 
-/* Tarjetas de Autorización */
+/* TARJETAS DE AUTORIZACIÓN */
 .card-access {
     background: var(--avg-card) !important;
     border: 1px solid var(--avg-border);
@@ -49,7 +50,13 @@ main {
     transition: all 0.3s ease;
 }
 
-/* Tablas con fondo gris para legibilidad de texto blanco */
+.card-access:hover {
+    transform: translateY(-5px);
+    border-color: var(--avg-green);
+    box-shadow: 0 10px 25px rgba(0, 202, 114, 0.1);
+}
+
+/* TABLAS PRINCIPALES (Monitoreo y Admin) */
 .table-responsive {
     background-color: #22272e;
     border-radius: 12px;
@@ -62,19 +69,19 @@ main {
 }
 
 .table tr {
-    background-color: #2d333b !important; /* Gris oscuro para contraste */
+    background-color: #2d333b !important; /* Fondo gris oscuro para contraste */
     border-bottom: 1px solid var(--avg-border);
 }
 
 .table thead th {
-    background-color: #1c2128 !important;
+    background-color: #46484a !important;
     color: var(--avg-green) !important;
     border-bottom: 2px solid var(--avg-green) !important;
     text-transform: uppercase;
     font-size: 0.85rem;
 }
 
-/* Botón Registrar */
+/* BOTONES Y PROGRESO */
 .btn-primary {
     background-color: var(--avg-green) !important;
     border: none;
@@ -83,8 +90,28 @@ main {
     border-radius: 50px;
 }
 
-/* Batería */
 .progress { background-color: #444c56; border-radius: 50px; }
 .progress-bar { background-color: var(--avg-green) !important; }
 
-.text-muted { color: #1077df !important; }
+/* TEXTOS DINÁMICOS */
+.text-muted { color: var(--avg-blue) !important; } /* IDs resaltados en azul */
+
+/* CORRECCIÓN DE HISTORIAL: MODAL CON SCROLL */
+#modalDetalle .modal-body {
+    max-height: 400px; /* Altura máxima para contener las filas */
+    overflow-y: auto;  /* ACTIVA EL DESPLAZAMIENTO PARA LOS 10 REGISTROS */
+    background-color: #ffffff; /* Fondo blanco para el interior del modal como en la imagen */
+}
+
+#modalDetalle .table {
+    margin-bottom: 0;
+}
+
+/* Personalización de la barra de scroll para el historial */
+#modalDetalle .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+#modalDetalle .modal-body::-webkit-scrollbar-thumb {
+    background: var(--avg-green);
+    border-radius: 10px;
+}
