@@ -125,7 +125,7 @@ async function togglePuerta(id, estadoActual) {
         alertasActivas[id] = setTimeout(async () => {
             const res = await fetch(`${API_URL}/${id}`);
             const p = await res.json();
-            if (p.estado) { alert(`⚠️ SEGURIDAD: "${p.nombre}" abierta demasiado tiempo.`); registrarLog(`Alerta crítica: Puerta ${id} abierta demasiado tiempo`, "danger"); }
+            if (p.estado) { alert(`⚠️ SEGURIDAD: "${p.nombre}" A excedido el limite de tiempo.`); registrarLog(`Alerta crítica: Puerta ${id} A excedido el limite de tiempo`, "danger"); }
         }, 10000);
     } else {
         datos.hora_cierre = hora;
@@ -180,15 +180,49 @@ function descargarReporte() {
 async function crearPuerta() {
     const n = document.getElementById("nombreP").value;
     const u = document.getElementById("ubicacionP").value;
+    
     if(!n || !u) return;
-    await fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nombre: n, ubicacion: u, estado: false, bateria: 100, fecha_act: new Date().toLocaleDateString() }) });
-    actualizarDatos();
+
+    try {
+        await fetch(API_URL, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ 
+                nombre: n, 
+                ubicacion: u, 
+                estado: false, 
+                bateria: 100, 
+                fecha_act: new Date().toLocaleDateString() 
+            }) 
+        });
+
+        // REGISTRO EN TERMINAL
+        registrarLog(`NUEVO DISPOSITIVO REGISTRADO: "${n.toUpperCase()}" EN ${u.toUpperCase()}`, "success");
+
+        document.getElementById("nombreP").value = ""; 
+        document.getElementById("ubicacionP").value = "";
+        
+        actualizarDatos();
+    } catch (e) {
+        console.error(e);
+        registrarLog("ERROR AL REGISTRAR NUEVO DISPOSITIVO", "danger");
+    }
 }
 
 async function eliminarPuerta(id) {
-    if(!confirm("¿Eliminar?")) return;
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-    actualizarDatos();
+    if(!confirm("¿ESTÁ SEGURO DE ELIMINAR ESTE DISPOSITIVO PERMANENTEMENTE?")) return;
+    
+    try {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        
+        // REGISTRO EN AUDITORÍA
+        registrarLog(`ELIMINACIÓN EXITOSA DE DISPOSITIVO ID: ${id}`, "danger");
+        
+        actualizarDatos();
+    } catch (e) {
+        console.error(e);
+        registrarLog(`ERROR AL INTENTAR ELIMINAR ID: ${id}`, "danger");
+    }
 }
 
 async function prepararEdicion(id) {
@@ -202,24 +236,81 @@ async function prepararEdicion(id) {
 
 async function guardarCambios() {
     const id = document.getElementById("editId").value;
-    const n = document.getElementById("editNombre").value;
-    const u = document.getElementById("editUbicacion").value;
-    await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nombre: n, ubicacion: u }) });
-    bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
-    actualizarDatos();
+    const nuevoNombre = document.getElementById("editNombre").value;
+    const nuevaUbicacion = document.getElementById("editUbicacion").value;
+
+    try {
+        // 1. Obtenemos los datos actuales antes de que se pierdan con el cambio
+        const respuestaOriginal = await fetch(`${API_URL}/${id}`);
+        const datosAnteriores = await respuestaOriginal.json();
+
+        // 2. Ejecutamos la actualización en el servidor
+        await fetch(`${API_URL}/${id}`, { 
+            method: 'PUT', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ nombre: nuevoNombre, ubicacion: nuevaUbicacion }) 
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+        
+        // 3. CONSTRUCCIÓN DEL MENSAJE DE AUDITORÍA DETALLADO
+        let mensajeLog = `MODIFICACIÓN EN ID: ${id} -> `;
+        
+        // Comprobamos si cambió el NOMBRE
+        if (datosAnteriores.nombre !== nuevoNombre) {
+            mensajeLog += `NOMBRE ACTUALIZADO DE (${datosAnteriores.nombre.toUpperCase()}) A: (${nuevoNombre.toUpperCase()}) `;
+        }
+        
+        // Comprobamos si cambió la UBICACIÓN (PISO)
+        if (datosAnteriores.ubicacion !== nuevaUbicacion) {
+            // Si ya se agregó texto del nombre, ponemos un separador
+            if (datosAnteriores.nombre !== nuevoNombre) mensajeLog += " | ";
+            
+            mensajeLog += `UBICACIÓN ACTUALIZADA DE (${datosAnteriores.ubicacion.toUpperCase()}) A: (${nuevaUbicacion.toUpperCase()})`;
+        }
+
+        // Si no hubo cambios reales
+        if (datosAnteriores.nombre === nuevoNombre && datosAnteriores.ubicacion === nuevaUbicacion) {
+            mensajeLog += "SIN CAMBIOS EN LOS PARÁMETROS";
+        }
+
+        registrarLog(mensajeLog, "warning");
+        
+        actualizarDatos();
+    } catch (e) {
+        console.error(e);
+        registrarLog(`ERROR CRÍTICO AL EDITAR DISPOSITIVO ID: ${id}`, "danger");
+    }
 }
 
+
 async function verDetalles(id) {
-    const res = await fetch(`${API_URL}/${id}`);
-    const p = await res.json();
-    const cuerpo = document.getElementById("cuerpoTablaDetalle");
-    cuerpo.innerHTML = "";
-    let listaA = JSON.parse(localStorage.getItem(`lista_A_${id}`)) || [];
-    let listaC = JSON.parse(localStorage.getItem(`lista_C_${id}`)) || [];
-    for(let i = 0; i < 10; i++) {
-        cuerpo.innerHTML += `<tr><td>${p.fecha_act || '---'}</td><td class="text-success">${listaA[i] || '---'}</td><td class="text-danger">${listaC[i] || '---'}</td></tr>`;
+    try {
+        const res = await fetch(`${API_URL}/${id}`);
+        const p = await res.json();
+        const cuerpo = document.getElementById("cuerpoTablaDetalle");
+        cuerpo.innerHTML = "";
+
+        let listaA = JSON.parse(localStorage.getItem(`lista_A_${id}`)) || [];
+        let listaC = JSON.parse(localStorage.getItem(`lista_C_${id}`)) || [];
+
+        for(let i = 0; i < 10; i++) {
+            cuerpo.innerHTML += `
+                <tr>
+                    <td>${p.fecha_act || '---'}</td>
+                    <td class="text-success fw-bold">${listaA[i] || '---'}</td>
+                    <td class="text-danger fw-bold">${listaC[i] || '---'}</td>
+                </tr>`;
+        }
+
+        document.getElementById("contadorAperturas").innerText = localStorage.getItem(`contador_abrir_${id}`) || 0;
+        document.getElementById("contadorCierres").innerText = localStorage.getItem(`contador_cerrar_${id}`) || 0;
+
+        // ESTA ES LA LÍNEA QUE FALTA PARA QUE APAREZCA EN LA TERMINAL
+        registrarLog(`CONSULTANDO HISTORIAL DE DISPOSITIVO ID: ${id}`, "info");
+
+        new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+    } catch (e) { 
+        console.error(e); 
     }
-    document.getElementById("contadorAperturas").innerText = localStorage.getItem(`contador_abrir_${id}`) || 0;
-    document.getElementById("contadorCierres").innerText = localStorage.getItem(`contador_cerrar_${id}`) || 0;
-    new bootstrap.Modal(document.getElementById('modalDetalle')).show();
 }

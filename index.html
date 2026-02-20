@@ -107,11 +107,40 @@
         </div>
     </div>
 
-    <footer class="footer mt-auto py-4 bg-dark text-white-50 border-top border-primary border-4 text-center">
-        <div class="container">
-            <small class="fw-bold">Desarrollado por: <span class="text-white">Alfonso Geovanni Labra Trejo</span> | ITP - 2026</small>
+    <footer class="footer mt-auto py-5 bg-dark text-white border-top border-primary border-4">
+    <div class="container">
+        <div class="row gy-4 align-items-center">
+            <div class="col-lg-4 text-center text-lg-start">
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start mb-2">
+                    <i class="bi bi-shield-lock-fill text-primary fs-3 me-2"></i>
+                    <h5 class="mb-0 fw-bold" style="letter-spacing: 1px;">APEX <span class="text-primary">SECURITY</span></h5>
+                </div>
+                <p class="small text-white-50 mb-0">Infraestructura de Gestión para Accesos Críticos</p>
+                <div class="mt-2">
+                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 small">v2.4.0 Stable</span>
+                </div>
+            </div>
+
+            <div class="col-lg-4 text-center">
+                <div class="p-3 rounded-4 bg-black bg-opacity-25 border border-secondary border-opacity-25 shadow-sm">
+                    <small class="text-white-50 d-block mb-1 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 2px;">Desarrollado por:</small>
+                    <h6 class="mb-0 fw-bold">Alfonso Geovanni Labra Trejo</h6>
+                    <small class="text-primary fw-bold">Ingeniería en Sistemas Computacionales</small>
+                </div>
+            </div>
+
+            <div class="col-lg-4 text-center text-lg-end">
+                <div class="mb-2">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
+                        <i class="bi bi-broadcast me-1 pulse-icon"></i> CLOUD API ONLINE
+                    </span>
+                </div>
+                <p class="small text-white-50 mb-1">Ciclo de Auditoría: <span id="currentDateFooter"></span></p>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">ITP Hidalgo &copy; 2026</small>
+            </div>
         </div>
-    </footer>
+    </div>
+</footer>
 
     <div class="modal fade" id="modalEditar" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg rounded-4"><div class="modal-header bg-warning border-0 py-3"><h5 class="modal-title fw-bold">Editar</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><input type="hidden" id="editId"><div class="mb-3"><label class="form-label small fw-bold text-muted">NOMBRE</label><input type="text" id="editNombre" class="form-control bg-light border-0"></div><div class="mb-3"><label class="form-label small fw-bold text-muted">UBICACIÓN</label><input type="text" id="editUbicacion" class="form-control bg-light border-0"></div><button class="btn btn-dark w-100" onclick="guardarCambios()">ACTUALIZAR</button></div></div></div></div>
     <div class="modal fade" id="modalDetalle" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content border-0 shadow-lg rounded-4"><div class="modal-header bg-primary text-white border-0"><h5 class="modal-title fw-bold">Historial</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><div class="bg-light p-3 d-flex justify-content-around text-center border-bottom"><div><div class="small text-muted fw-bold">APERTURAS</div><h4 class="mb-0 text-success" id="contadorAperturas">0</h4></div><div><div class="small text-muted fw-bold">CIERRES</div><h4 class="mb-0 text-danger" id="contadorCierres">0</h4></div></div><table class="table mb-0 text-center"><thead class="table-light small"><tr><th>FECHA</th><th>APERTURA</th><th>CIERRE</th></tr></thead><tbody id="cuerpoTablaDetalle"></tbody></table></div></div></div></div>
