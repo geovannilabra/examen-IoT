@@ -84,9 +84,25 @@ function renderAdmin(puertas) {
 
 function renderControl(puertas) {
     const contenedor = document.getElementById("contenedorControl");
-    if(!contenedor) return; contenedor.innerHTML = "";
+    if(!contenedor) return;
+    contenedor.innerHTML = "";
     puertas.forEach(p => {
-        contenedor.innerHTML += `<div class="col-md-4 mb-4"><div class="card card-access h-100 p-4 text-center"><div class="mb-3"><i class="bi ${p.estado ? 'bi-shield-exclamation text-warning' : 'bi-shield-check text-success'} fs-1"></i></div><h5 class="fw-bold text-white mb-1">${p.nombre}</h5><p class="small fw-bold" style="color: ${p.estado ? '#ffc107' : '#00ca72'}">${p.estado ? 'ACCESO ABIERTO' : 'TOTALMENTE PROTEGIDO'}</p><div class="form-check form-switch d-flex justify-content-center mt-3"><input class="form-check-input" type="checkbox" style="width:3em; height:1.5em; cursor:pointer" ${p.estado ? 'checked' : ''} onclick="togglePuerta('${p.id}', ${p.estado})"></div></div></div>`;
+        contenedor.innerHTML += `
+            <div class="col-md-4 mb-4">
+                <div class="card card-access h-100 p-4 text-center">
+                    <div class="mb-3"><i class="bi ${p.estado ? 'bi-shield-exclamation text-warning' : 'bi-shield-check text-success'} fs-1"></i></div>
+                    <h5 class="fw-bold text-white mb-1">${p.nombre}</h5>
+                    <p class="small fw-bold" style="color: ${p.estado ? '#ffc107' : '#00ca72'}">${p.estado ? 'ACCESO ABIERTO' : 'TOTALMENTE PROTEGIDO'}</p>
+                    
+                    <div class="mt-2">
+                        <small class="text-white-50 fw-bold d-block mb-2">ID: ${p.id}</small>
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input class="form-check-input" type="checkbox" style="width:3em; height:1.5em; cursor:pointer" 
+                            ${p.estado ? 'checked' : ''} onclick="togglePuerta('${p.id}', ${p.estado})">
+                        </div>
+                    </div>
+                </div>
+            </div>`;
     });
 }
 
