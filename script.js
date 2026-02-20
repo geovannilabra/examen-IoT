@@ -62,6 +62,12 @@ async function actualizarDatos() {
         renderAdmin(datos);
         renderControl(datos);
         renderMonitoreo(datos);
+
+            const busqueda = document.getElementById("buscadorPuertas").value;
+            if (busqueda && busqueda.trim() !== "") {
+                filtrarPuertas(); 
+               }
+
     } catch (e) { 
         console.error("Error al conectar con la API:", e); 
         registrarLog("Error de conexión con la API externa", "danger");
