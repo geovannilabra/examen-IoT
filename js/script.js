@@ -118,21 +118,49 @@ async function togglePuerta(id, estadoActual) {
     const nuevoEstado = !estadoActual;
     const ahora = new Date();
     const hora = ahora.toLocaleTimeString();
-    let datos = { estado: nuevoEstado, fecha_act: ahora.toLocaleDateString() };
+    const fecha = ahora.toLocaleDateString();
+    let datos = { estado: nuevoEstado, fecha_act: fecha };
+
     if (nuevoEstado) {
         datos.hora_apertura = hora;
         registrarLog(`Acceso concedido en dispositivo ID: ${id}`, "warning");
+        
+        // --- AQUÍ GUARDAMOS PARA EL HISTORIAL ---
+        let listaA = JSON.parse(localStorage.getItem(`lista_A_${id}`)) || [];
+        listaA.unshift(hora); // Agregamos al inicio
+        localStorage.setItem(`lista_A_${id}`, JSON.stringify(listaA.slice(0, 10))); // Guardamos últimos 10
+        let contA = parseInt(localStorage.getItem(`contador_abrir_${id}`) || 0) + 1;
+        localStorage.setItem(`contador_abrir_${id}`, contA);
+        // ----------------------------------------
+
         alertasActivas[id] = setTimeout(async () => {
             const res = await fetch(`${API_URL}/${id}`);
             const p = await res.json();
-            if (p.estado) { alert(`⚠️ SEGURIDAD: "${p.nombre}" A excedido el limite de tiempo.`); registrarLog(`Alerta crítica: Puerta ${id} A excedido el limite de tiempo`, "danger"); }
+            if (p.estado) { 
+                alert(`⚠️ SEGURIDAD: "${p.nombre}" HA excedido el límite de tiempo.`); 
+                registrarLog(`Alerta crítica: Puerta ${id} HA excedido el límite de tiempo`, "danger"); 
+            }
         }, 10000);
     } else {
         datos.hora_cierre = hora;
         registrarLog(`Acceso cerrado en dispositivo ID: ${id}`, "success");
+        
+        // --- AQUÍ GUARDAMOS PARA EL HISTORIAL ---
+        let listaC = JSON.parse(localStorage.getItem(`lista_C_${id}`)) || [];
+        listaC.unshift(hora);
+        localStorage.setItem(`lista_C_${id}`, JSON.stringify(listaC.slice(0, 10)));
+        let contC = parseInt(localStorage.getItem(`contador_cerrar_${id}`) || 0) + 1;
+        localStorage.setItem(`contador_cerrar_${id}`, contC);
+        // ----------------------------------------
+
         if (alertasActivas[id]) { clearTimeout(alertasActivas[id]); delete alertasActivas[id]; }
     }
-    await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos) });
+    
+    await fetch(`${API_URL}/${id}`, { 
+        method: 'PUT', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(datos) 
+    });
     actualizarDatos();
 }
 
